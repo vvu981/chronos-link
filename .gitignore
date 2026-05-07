@@ -1,0 +1,44 @@
+# ==========================================
+# IDEs (IntelliJ, VSCode, etc.)
+# ==========================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# ==========================================
+# Sistema y Temporales
+# ==========================================
+bin/
+build/
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.swp
+
+# ==========================================
+# Maven (El "corazón" del backend)
+# ==========================================
+# Ignoramos la carpeta donde se compila el código
+target/
+
+# Logs de la aplicación
+*.log
+
+# Opcional: Si prefieres no subir los ejecutables del wrapper de Maven
+# .mvn/wrapper/maven-wrapper.jar
+
+# ==========================================
+# Configuración y Seguridad
+# ==========================================
+# Muy importante si usas archivos de propiedades sensibles
+.env
+**/application-local.properties
+**/application-dev.properties
