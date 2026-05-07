@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -22,6 +24,12 @@ public class Capsule {
 
     @Column(columnDefinition = "TEXT") // Para permitir contenido largo
     private String content;
+
+    @Column(name= "createdAt")
+    private LocalDateTime createdAt;
+
+    @Column(name= "deletedAt")
+    private LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY) // Evitamos traer el usuario si no es necesario
     @JoinColumn(name = "user_id", nullable = false) // Nombramos la FK de forma clara

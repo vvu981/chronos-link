@@ -19,10 +19,19 @@ public interface UserService {
 
     Optional<User> findByUsername(String username);
 
-    boolean existsUser(User user);
-
     @Transactional
     User editUser(User dataIn, UUID id);
 
     User deleteUser(UUID id);
+
+    List<User> getActiveUsers();
+
+    List<User> getDeletedUsers();
+
+    List<User> getAllUsers();
+
+    User activateUser(UUID id);
+
+    // En UserServiceImpl.java
+    User getActiveUserOrThrow(UUID id);
 }

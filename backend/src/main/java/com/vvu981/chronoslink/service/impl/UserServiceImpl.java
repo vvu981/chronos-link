@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,29 +36,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByEmail(String email) {
         if (email.isEmpty()) throw new RuntimeException("Error: email vacio");
-        String emailLower = email.toLowerCase();
+        String emailLower = clean(email);
         return userRepository.findByEmail(emailLower);
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
         if (username.isEmpty()) throw new RuntimeException("Error: username vacio");
-        String usernameLower = username.toLowerCase();
+        String usernameLower = clean(username);
         return userRepository.findByUsername(usernameLower);
-    }
-
-    @Override
-    public boolean existsUser(User user) {
-        Optional<User> userEmail = userRepository.findByEmail(user.getEmail());
-        Optional<User> userUsername = userRepository.findByUsername(user.getUsername());
-        return userEmail.isPresent() || userUsername.isPresent();
     }
 
     @Transactional
     @Override
     public User editUser(User dataIn, UUID id) {
 
-        User existingUser = findOrThrow(id);
+        User existingUser = getActiveUserOrThrow(id);
 
         String newUsername = clean(dataIn.getUsername());
         String newEmail = clean(dataIn.getEmail());
@@ -76,20 +70,29 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User deleteUser(UUID id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Error al eliminar: no se encuentra el usuario con ese id"));
+        User user = getActiveUserOrThrow(id);
 
-        if (user.isDeleted()) throw new RuntimeException("Error: usuario ya eliminado");
-        user.setDeleted(true);
+        user.setDeletedAt(LocalDateTime.now());
         return userRepository.save(user);
+    }
+
+    @Override
+    public List<User> getActiveUsers() {
+        return userRepository.findActiveUsers();
+    }
+
+    @Override
+    public List<User> getDeletedUsers() {
+        return userRepository.findDeletedUsers();
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     private String clean(String value) {
         return value == null ? "" : value.toLowerCase().trim();
-    }
-
-    private User findOrThrow(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
     private void validateUniqueness(String username, String email, UUID id) {
@@ -104,5 +107,30 @@ public class UserServiceImpl implements UserService {
                 throw new RuntimeException("Error: El username ya está en uso.");
             }
         });
+    }
+
+    @Override
+    public User activateUser(UUID id) {
+        User deletedUser = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Error al activar usuario: no existe el usuario con ese id"));
+
+        if (userIsActive(deletedUser)) throw new RuntimeException("Error al activar usuario: el usuario ya esta activado");
+
+        deletedUser.setDeletedAt(null);
+
+        return userRepository.save(deletedUser);
+
+    }
+
+    // En UserServiceImpl.java
+    @Override
+    public User getActiveUserOrThrow(UUID id) {
+        return userRepository.findById(id)
+                .filter(user -> userIsActive(user)) // Filtramos aquí directamente para ser elegantes
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado o inactivo"));
+    }
+
+    public boolean userIsActive(User user) {
+        return user.getDeletedAt() == null;
     }
 }

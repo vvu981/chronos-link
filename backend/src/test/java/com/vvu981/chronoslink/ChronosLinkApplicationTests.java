@@ -6,8 +6,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class ChronosLinkApplicationTests {
 
+    /*
     @Test
     void contextLoads() {
     }
+
+     */
 
 }

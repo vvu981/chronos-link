@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor; // Indispensable para JPA
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Entity
@@ -42,7 +43,7 @@ public class User {
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Capsule> capsules;
 
-    @Column(name = "isDeleted")
-    private boolean isDeleted = false;
+    @Column(name = "deletedAt")
+    private LocalDateTime deletedAt;
 
 }
