@@ -13,7 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Capsule {
+public class Capsule implements OwnedResource{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -41,5 +41,10 @@ public class Capsule {
     @Enumerated(EnumType.STRING) // ¡Importante! Guardar el texto del enum, no el número
     @Column(nullable = false)
     private CapsuleStatus status;
+
+    @Override
+    public User getOwner() {
+        return this.owner; // Devuelve el campo User que ya tienes
+    }
 
 }

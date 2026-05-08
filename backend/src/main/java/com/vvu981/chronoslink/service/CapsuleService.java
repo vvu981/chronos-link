@@ -2,6 +2,7 @@ package com.vvu981.chronoslink.service;
 
 import com.vvu981.chronoslink.model.Capsule;
 import com.vvu981.chronoslink.model.User;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,15 +10,23 @@ import java.util.UUID;
 
 public interface CapsuleService {
 
+
     List<Capsule> getActiveCapsulesByOwnerOrThrow(UUID ownerId);
 
-    List<Capsule> getAllCapsulesByUser(User user);
+    @Transactional(readOnly = true)
+    List<Capsule> getAllCapsulesByUser(UUID userId);
 
-    Capsule createCapsule(Capsule capsule, UUID userId);
+    @Transactional
+    Capsule createCapsule(Capsule capsule, UUID ownerId);
 
-    Capsule deleteCapsule(Capsule capsule, UUID ownerId);
+    @Transactional
+    Capsule deleteCapsule(UUID capsuleId, UUID ownerId);
 
-    boolean isReadyToOpen(UUID id);
+    @Transactional
+    Capsule editCapsule(Capsule dataIn, UUID ownerId);
 
-    Capsule openCapsule(UUID id);
+    @Transactional
+    Capsule openCapsule(UUID id, UUID ownerId);
+
+    boolean isReadyToOpen(Capsule capsule);
 }

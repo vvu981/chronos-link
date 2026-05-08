@@ -1,9 +1,9 @@
 package com.vvu981.chronoslink.model;
 
 public enum CapsuleStatus {
-    DRAFT,
-    AVAILABLE,
-    BLOCKED,
-    OPENED,
-    EXPIRED
+    DRAFT, //borrador
+    AVAILABLE, //disponible
+    BLOCKED, //bloqueada o no-abierta
+    OPENED, //abierta
+    EXPIRED //expirada
 }
