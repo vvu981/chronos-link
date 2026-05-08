@@ -4,19 +4,28 @@ import com.vvu981.chronoslink.model.Capsule;
 import com.vvu981.chronoslink.model.CapsuleStatus;
 import com.vvu981.chronoslink.model.User;
 import com.vvu981.chronoslink.repository.CapsuleRepository;
+import com.vvu981.chronoslink.repository.specifications.CapsuleSpecifications;
 import com.vvu981.chronoslink.service.CapsuleService;
 import com.vvu981.chronoslink.service.SecurityService;
 import com.vvu981.chronoslink.service.UserService;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class CapsuleServiceImpl implements CapsuleService {
+
+    // En el paquete dto o service
+    public record CapsuleFilter(
+            CapsuleStatus status,
+            String title,
+            LocalDateTime from,
+            LocalDateTime to
+    ) {}
 
     private final CapsuleRepository capsuleRepository;
     private final UserService userService; // Interfaz, no Impl
@@ -31,13 +40,15 @@ public class CapsuleServiceImpl implements CapsuleService {
     }
 
     @Override
-    public List<Capsule> getActiveCapsulesByOwnerOrThrow(UUID ownerId) {
+    public List<Capsule> findCapsules(UUID ownerId, CapsuleFilter filter) {
         User owner = userService.getActiveUserOrThrow(ownerId);
 
-        // Más limpio con Streams (Java Moderno)
-        return owner.getCapsules().stream()
-                .filter(this::capsuleIsActive)
-                .collect(Collectors.toList());
+        Specification<Capsule> spec = Specification.where(CapsuleSpecifications.hasOwner(owner))
+                .and(CapsuleSpecifications.isActive())
+                .and(CapsuleSpecifications.withStatus(filter.status()))
+                .and(CapsuleSpecifications.withTitle(filter.title()));
+
+        return capsuleRepository.findAll(spec);
     }
 
     @Transactional(readOnly = true)

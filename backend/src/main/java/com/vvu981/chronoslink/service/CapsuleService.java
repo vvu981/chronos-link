@@ -1,7 +1,9 @@
 package com.vvu981.chronoslink.service;
 
 import com.vvu981.chronoslink.model.Capsule;
+import com.vvu981.chronoslink.model.CapsuleStatus;
 import com.vvu981.chronoslink.model.User;
+import com.vvu981.chronoslink.service.impl.CapsuleServiceImpl;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -10,8 +12,7 @@ import java.util.UUID;
 
 public interface CapsuleService {
 
-
-    List<Capsule> getActiveCapsulesByOwnerOrThrow(UUID ownerId);
+    List<Capsule> findCapsules(UUID ownerId, CapsuleServiceImpl.CapsuleFilter filter);
 
     @Transactional(readOnly = true)
     List<Capsule> getAllCapsulesByUser(UUID userId);
