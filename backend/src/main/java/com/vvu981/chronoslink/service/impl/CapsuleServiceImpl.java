@@ -1,6 +1,7 @@
 package com.vvu981.chronoslink.service.impl;
 
 import com.vvu981.chronoslink.model.Capsule;
+import com.vvu981.chronoslink.model.CapsuleStatus;
 import com.vvu981.chronoslink.model.User;
 import com.vvu981.chronoslink.repository.CapsuleRepository;
 import com.vvu981.chronoslink.repository.UserRepository;
@@ -39,12 +40,9 @@ public class CapsuleServiceImpl implements CapsuleService {
 
     @Override
     public List<Capsule> getAllCapsulesByUser(User user) {
-        // 1. Verificamos si el usuario existe (usando tu lógica)
         if (!userRepository.existsById(user.getId())) {
             throw new RuntimeException("El usuario no existe");
         }
-
-        // 2. Pedimos las cápsulas al repositorio
         return capsuleRepository.findByOwner(user);
     }
 
@@ -75,8 +73,34 @@ public class CapsuleServiceImpl implements CapsuleService {
     }
 
     private boolean capsuleIsActive(Capsule capsule) {
-
         return capsule.getDeletedAt() == null;
+    }
+
+    private Capsule getActiveCapsuleOrThrow(UUID idCapsule) {
+        Capsule capsule = capsuleRepository.findById(idCapsule)
+                .orElseThrow(() -> new RuntimeException("Error al obtener capsula: capsula no encontrada con ese id"));
+
+        if (!capsuleIsActive(capsule)) throw new RuntimeException("Error al obtener capsula: Capsula no activa");
+        return capsule;
+    }
+
+    @Override
+    public boolean isReadyToOpen(UUID id) {
+        Capsule capsule = getActiveCapsuleOrThrow(id);
+        return LocalDateTime.now().isAfter(capsule.getOpenAt()) && capsule.getStatus().equals(CapsuleStatus.AVAILABLE);
+    }
+
+    @Override
+    public Capsule openCapsule(UUID id) {
+        Capsule capsule = getActiveCapsuleOrThrow(id);
+
+        // Si intentan abrirla antes de tiempo, lanzamos error
+        if (!isReadyToOpen(id)) {
+            throw new RuntimeException("Esta cápsula aún no puede abrirse. Fecha de apertura: " + capsule.getOpenAt());
+        }
+        capsule.setStatus(CapsuleStatus.OPENED);
+        capsuleRepository.save(capsule);
+        return capsule;
     }
 
 

@@ -19,7 +19,7 @@ classDiagram
 
     class Status {
         <<enumeration>>
-        DRAFT
+        DRAFT //Archivado
         AVAILABLE
         BLOCKED
         OPENED

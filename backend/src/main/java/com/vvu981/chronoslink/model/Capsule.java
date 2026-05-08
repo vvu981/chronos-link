@@ -31,6 +31,9 @@ public class Capsule {
     @Column(name= "deletedAt")
     private LocalDateTime deletedAt;
 
+    @Column(name= "openAt")
+    private LocalDateTime openAt;
+
     @ManyToOne(fetch = FetchType.LAZY) // Evitamos traer el usuario si no es necesario
     @JoinColumn(name = "user_id", nullable = false) // Nombramos la FK de forma clara
     private User owner;

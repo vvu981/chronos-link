@@ -16,4 +16,8 @@ public interface CapsuleService {
     Capsule createCapsule(Capsule capsule, UUID userId);
 
     Capsule deleteCapsule(Capsule capsule, UUID ownerId);
+
+    boolean isReadyToOpen(UUID id);
+
+    Capsule openCapsule(UUID id);
 }
