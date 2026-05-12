@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/capsules") // Ruta base para todos los métodos de esta clase
+@RequestMapping("/api/v1/user/{id}/capsules") // Ruta base para todos los métodos de esta clase
 public class CapsuleController {
 
     private final CapsuleService capsuleService;
@@ -22,7 +22,7 @@ public class CapsuleController {
         this.capsuleService = capsuleService;
     }
 
-    @GetMapping
+    @GetMapping("/get-capsules")
     public ResponseEntity<List<Capsule>> getCapsules(
             @RequestHeader("X-User-Id") UUID ownerId, CapsuleFilter filter) {
 
@@ -30,7 +30,7 @@ public class CapsuleController {
         return ResponseEntity.ok(results); // Devuelve 200 OK con la lista
     }
 
-    @PostMapping
+    @PostMapping("/create-capsule")
     public ResponseEntity<Capsule> createCapsule(
             @RequestHeader("X-User-Id") UUID ownerId, @RequestBody Capsule capsule) { // Transforma el JSON del cuerpo en un objeto Java
 
@@ -39,7 +39,7 @@ public class CapsuleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{capsuleId}")
     public ResponseEntity<Capsule> deleteCapsule(@RequestHeader("X-User-Id") UUID ownerId, @PathVariable UUID capsuleId) {
         Capsule capsuleDeleted = capsuleService.deleteCapsule(capsuleId, ownerId);
 

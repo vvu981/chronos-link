@@ -1,5 +1,6 @@
 package com.vvu981.chronoslink.service;
 
+import com.vvu981.chronoslink.dto.UserUpdateDTO;
 import com.vvu981.chronoslink.model.Capsule;
 import com.vvu981.chronoslink.model.User;
 import com.vvu981.chronoslink.repository.UserRepository;
@@ -14,13 +15,13 @@ import java.util.UUID;
 @Service
 public interface UserService {
 
-    User create(User user);
+    User createUser(User user);
     Optional<User> findByEmail(String email);
 
     Optional<User> findByUsername(String username);
 
     @Transactional
-    User editUser(User dataIn, UUID id);
+    User editUser(UUID id, UserUpdateDTO dto);
 
     User deleteUser(UUID id);
 
@@ -32,6 +33,7 @@ public interface UserService {
 
     User activateUser(UUID id);
 
-    // En UserServiceImpl.java
     User getActiveUserOrThrow(UUID id);
+
+    User updateAdminStatus(UUID userId, Boolean adminStatus);
 }

@@ -55,7 +55,7 @@ class UserServiceImplTest {
         when(userRepository.findByUsername("newuser")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        User result = userService.create(input);
+        User result = userService.createUser(input);
 
         assertEquals("new@test.com", result.getEmail());
         assertEquals("newuser", result.getUsername());
@@ -66,7 +66,7 @@ class UserServiceImplTest {
     @DisplayName("Create: Error por email duplicado")
     void create_Fail_EmailExists() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingUser));
-        assertThrows(RuntimeException.class, () -> userService.create(existingUser));
+        assertThrows(RuntimeException.class, () -> userService.createUser(existingUser));
     }
 
     // --- FIND METHODS ---
@@ -214,7 +214,7 @@ class UserServiceImplTest {
         when(userRepository.findByUsername("")).thenReturn(Optional.empty());
         when(userRepository.save(any())).thenReturn(userNull);
 
-        assertNotNull(userService.create(userNull));
+        assertNotNull(userService.createUser(userNull));
     }
 
     // 1. Forzar 'id == null' específicamente para el bloque de USERNAME
@@ -229,7 +229,7 @@ class UserServiceImplTest {
         newUser.setEmail("new@test.com");
         newUser.setUsername("originaluser");
 
-        assertThrows(RuntimeException.class, () -> userService.create(newUser));
+        assertThrows(RuntimeException.class, () -> userService.createUser(newUser));
     }
 
     // 2. Forzar '!u.getId().equals(id)' para el bloque de EMAIL en edición

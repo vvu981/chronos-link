@@ -1,14 +1,12 @@
 package com.vvu981.chronoslink.model;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor; // Indispensable para JPA
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 @Entity
@@ -38,7 +36,7 @@ public class User {
     private LocalDateTime bannedAt;
 
     @Column(name = "isAdmin")
-    private boolean isAdmin = false;
+    private boolean isAdmin;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Capsule> capsules;

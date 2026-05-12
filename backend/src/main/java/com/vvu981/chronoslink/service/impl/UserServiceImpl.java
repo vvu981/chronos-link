@@ -1,9 +1,11 @@
 package com.vvu981.chronoslink.service.impl;
 
+import com.vvu981.chronoslink.dto.UserUpdateDTO;
 import com.vvu981.chronoslink.model.User;
 import com.vvu981.chronoslink.repository.UserRepository;
 import com.vvu981.chronoslink.service.UserService;
 import jakarta.transaction.Transactional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,13 +17,15 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public User create(User user) {
+    public User createUser(User user) {
         String email = clean(user.getEmail());
         String username = clean(user.getUsername());
 
@@ -29,7 +33,11 @@ public class UserServiceImpl implements UserService {
 
         user.setEmail(email);
         user.setUsername(username);
+        user.setAdmin(false);
         user.setCreatedAt(LocalDateTime.now());
+
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
         return userRepository.save(user);
     }
 
@@ -49,20 +57,16 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User editUser(User dataIn, UUID id) {
-
+    public User editUser(UUID id, UserUpdateDTO dto) {
         User existingUser = getActiveUserOrThrow(id);
 
-        String newUsername = clean(dataIn.getUsername());
-        String newEmail = clean(dataIn.getEmail());
+        if (dto.username() != null) existingUser.setUsername(dto.username());
+        if (dto.email() != null) existingUser.setEmail(dto.email());
 
-        validateUniqueness(newUsername, newEmail, id);
-
-        existingUser.setUsername(newUsername);
-        existingUser.setEmail(newEmail);
-        if (dataIn.getPassword() != null && !dataIn.getPassword().isEmpty()) {
-            existingUser.setPassword(dataIn.getPassword());
+        if (dto.password() != null && !dto.password().isBlank()) {
+            existingUser.setPassword(passwordEncoder.encode(dto.password()));
         }
+        // Si dto.password() es null, no hacemos nada y se mantiene la que ya tenía
 
         return userRepository.save(existingUser);
     }
@@ -122,12 +126,28 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    // En UserServiceImpl.java
     @Override
     public User getActiveUserOrThrow(UUID id) {
         return userRepository.findById(id)
                 .filter(user -> userIsActive(user)) // Filtramos aquí directamente para ser elegantes
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado o inactivo"));
+    }
+
+    @Override
+    @Transactional
+    public User updateAdminStatus(UUID userId, Boolean adminStatus) { // Usamos Boolean para detectar el null
+        if (adminStatus == null) {
+            throw new IllegalArgumentException("El estado de administrador no puede ser nulo.");
+        }
+
+        User userToChange = getActiveUserOrThrow(userId);
+
+        if (userToChange.isAdmin() != adminStatus) {
+            userToChange.setAdmin(adminStatus);
+            return userRepository.save(userToChange);
+        }
+
+        return userToChange;
     }
 
     public boolean userIsActive(User user) {
