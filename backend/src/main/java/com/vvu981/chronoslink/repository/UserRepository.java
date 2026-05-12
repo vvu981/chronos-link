@@ -18,9 +18,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByUsername(String username);
 
-    @Query("SELECT u FROM User u WHERE u.isDeleted = false")
+    @Query("SELECT u FROM User u WHERE u.deletedAt IS NOT NULL")
     List<User> findActiveUsers();
 
-    @Query("SELECT u FROM User u WHERE u.isDeleted = true")
+    @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
     List<User> findDeletedUsers();
+
+    Optional<User> findByUsernameOrEmail(String username, String email);
 }

@@ -5,6 +5,7 @@ import com.vvu981.chronoslink.model.User;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+
 public record UserCreateDTO(
         UUID id,
         String email,

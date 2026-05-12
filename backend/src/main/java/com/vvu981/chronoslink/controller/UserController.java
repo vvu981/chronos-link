@@ -1,15 +1,19 @@
 package com.vvu981.chronoslink.controller;
 
+import com.vvu981.chronoslink.dto.LoginRequest;
 import com.vvu981.chronoslink.dto.UserCreateDTO;
 import com.vvu981.chronoslink.dto.UserResponseDTO;
 import com.vvu981.chronoslink.dto.UserUpdateDTO;
 import com.vvu981.chronoslink.model.User;
+import com.vvu981.chronoslink.repository.UserRepository;
+import com.vvu981.chronoslink.service.AuthService;
 import com.vvu981.chronoslink.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -17,12 +21,16 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-    public UserController(UserService userService) {
+    private final UserRepository userRepository;
+    private final AuthService authService;
+    public UserController(UserService userService, UserRepository userRepository, AuthService authService) {
         this.userService = userService;
+        this.userRepository = userRepository;
+        this.authService = authService;
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO userDTO) {
+    public ResponseEntity<UserResponseDTO> registerUser(@RequestBody UserCreateDTO userDTO) {
         User userToCreate = new User();
         userToCreate.setEmail(userDTO.email());
         userToCreate.setUsername(userDTO.username());
@@ -30,6 +38,12 @@ public class UserController {
         User createdUser = userService.createUser(userToCreate);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponseDTO(createdUser));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponseDTO> login(@RequestBody LoginRequest loginData) {
+        UserResponseDTO response = authService.login(loginData);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/delete-user")
@@ -54,9 +68,10 @@ public class UserController {
             @PathVariable UUID id,
             @RequestBody boolean isAdmin) {
 
-        // Delegamos la actualización al servicio
         User updatedUser = userService.updateAdminStatus(id, isAdmin);
 
         return ResponseEntity.ok(new UserResponseDTO(updatedUser));
     }
+
+
 }
