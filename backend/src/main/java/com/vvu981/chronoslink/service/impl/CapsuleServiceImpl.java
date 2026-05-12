@@ -1,5 +1,6 @@
 package com.vvu981.chronoslink.service.impl;
 
+import com.vvu981.chronoslink.dto.CapsuleFilter;
 import com.vvu981.chronoslink.model.Capsule;
 import com.vvu981.chronoslink.model.CapsuleStatus;
 import com.vvu981.chronoslink.model.User;
@@ -19,17 +20,9 @@ import java.util.UUID;
 @Service
 public class CapsuleServiceImpl implements CapsuleService {
 
-    // En el paquete dto o service
-    public record CapsuleFilter(
-            CapsuleStatus status,
-            String title,
-            LocalDateTime from,
-            LocalDateTime to
-    ) {}
-
     private final CapsuleRepository capsuleRepository;
-    private final UserService userService; // Interfaz, no Impl
-    private final SecurityService securityService; // Interfaz, no Impl
+    private final UserService userService;
+    private final SecurityService securityService;
 
     public CapsuleServiceImpl(CapsuleRepository capsuleRepository,
                               UserService userService,
@@ -39,23 +32,19 @@ public class CapsuleServiceImpl implements CapsuleService {
         this.securityService = securityService;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Capsule> findCapsules(UUID ownerId, CapsuleFilter filter) {
         User owner = userService.getActiveUserOrThrow(ownerId);
 
+        // Construcción dinámica completa: Dueño + Activas + Filtros Opcionales
         Specification<Capsule> spec = Specification.where(CapsuleSpecifications.hasOwner(owner))
                 .and(CapsuleSpecifications.isActive())
                 .and(CapsuleSpecifications.withStatus(filter.status()))
-                .and(CapsuleSpecifications.withTitle(filter.title()));
+                .and(CapsuleSpecifications.withTitle(filter.title()))
+                .and(CapsuleSpecifications.createdAtBetween(filter.from(), filter.to()));
 
         return capsuleRepository.findAll(spec);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public List<Capsule> getAllCapsulesByUser(UUID userId) {
-        User user = userService.getActiveUserOrThrow(userId);
-        return capsuleRepository.findByOwner(user);
     }
 
     @Transactional
@@ -65,6 +54,7 @@ public class CapsuleServiceImpl implements CapsuleService {
 
         capsule.setOwner(owner);
         capsule.setCreatedAt(LocalDateTime.now());
+        // Importante: No asumas que el status viene bien del exterior
         capsule.setStatus(CapsuleStatus.BLOCKED);
         return capsuleRepository.save(capsule);
     }
@@ -73,8 +63,6 @@ public class CapsuleServiceImpl implements CapsuleService {
     @Override
     public Capsule deleteCapsule(UUID capsuleId, UUID ownerId) {
         Capsule capsule = getActiveCapsuleOrThrow(capsuleId);
-
-        // El SecurityService ya se encarga de verificar al usuario
         securityService.validateOwnership(capsule, ownerId);
 
         capsule.setDeletedAt(LocalDateTime.now());
@@ -85,13 +73,12 @@ public class CapsuleServiceImpl implements CapsuleService {
     @Override
     public Capsule editCapsule(Capsule dataIn, UUID ownerId) {
         Capsule existing = getActiveCapsuleOrThrow(dataIn.getId());
-
-        // Bloqueamos edición si no es el dueño
         securityService.validateOwnership(existing, ownerId);
 
         existing.setContent(dataIn.getContent());
         existing.setTitle(dataIn.getTitle());
 
+        // Lógica de transición de estados protegida
         if (canChangeStatus(existing)) {
             existing.setStatus(dataIn.getStatus());
         }
@@ -103,11 +90,10 @@ public class CapsuleServiceImpl implements CapsuleService {
     @Override
     public Capsule openCapsule(UUID id, UUID ownerId) {
         Capsule capsule = getActiveCapsuleOrThrow(id);
-
         securityService.validateOwnership(capsule, ownerId);
 
         if (!isReadyToOpen(capsule)) {
-            throw new RuntimeException("Esta cápsula aún no puede abrirse.");
+            throw new RuntimeException("Condiciones de apertura no cumplidas.");
         }
 
         capsule.setStatus(CapsuleStatus.OPENED);
@@ -120,22 +106,17 @@ public class CapsuleServiceImpl implements CapsuleService {
                 && CapsuleStatus.AVAILABLE.equals(capsule.getStatus());
     }
 
-    // --- MÉTODOS PRIVADOS DE APOYO ---
-
     private boolean capsuleIsActive(Capsule capsule) {
         return capsule.getDeletedAt() == null;
     }
 
     private Capsule getActiveCapsuleOrThrow(UUID idCapsule) {
-        Capsule capsule = capsuleRepository.findById(idCapsule)
-                .orElseThrow(() -> new RuntimeException("Cápsula no encontrada"));
-
-        if (!capsuleIsActive(capsule)) throw new RuntimeException("Cápsula no activa");
-        return capsule;
+        return capsuleRepository.findById(idCapsule)
+                .filter(this::capsuleIsActive) // Filtro elegante en el stream del Optional
+                .orElseThrow(() -> new RuntimeException("Cápsula no encontrada o inactiva"));
     }
 
     private boolean canChangeStatus(Capsule capsule) {
-        // No repetimos la consulta a la DB, usamos el objeto que ya tenemos
         CapsuleStatus status = capsule.getStatus();
         return status.equals(CapsuleStatus.BLOCKED) || status.equals(CapsuleStatus.AVAILABLE);
     }

@@ -1,5 +1,6 @@
 package com.vvu981.chronoslink.service;
 
+import com.vvu981.chronoslink.dto.CapsuleFilter;
 import com.vvu981.chronoslink.model.Capsule;
 import com.vvu981.chronoslink.model.CapsuleStatus;
 import com.vvu981.chronoslink.model.User;
@@ -12,10 +13,9 @@ import java.util.UUID;
 
 public interface CapsuleService {
 
-    List<Capsule> findCapsules(UUID ownerId, CapsuleServiceImpl.CapsuleFilter filter);
 
     @Transactional(readOnly = true)
-    List<Capsule> getAllCapsulesByUser(UUID userId);
+    List<Capsule> findCapsules(UUID ownerId, CapsuleFilter filter);
 
     @Transactional
     Capsule createCapsule(Capsule capsule, UUID ownerId);
