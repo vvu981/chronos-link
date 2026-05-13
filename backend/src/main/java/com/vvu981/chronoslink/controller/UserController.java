@@ -5,7 +5,6 @@ import com.vvu981.chronoslink.dto.UserCreateDTO;
 import com.vvu981.chronoslink.dto.UserResponseDTO;
 import com.vvu981.chronoslink.dto.UserUpdateDTO;
 import com.vvu981.chronoslink.model.User;
-import com.vvu981.chronoslink.repository.UserRepository;
 import com.vvu981.chronoslink.service.AuthService;
 import com.vvu981.chronoslink.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -13,19 +12,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
     private final AuthService authService;
-    public UserController(UserService userService, UserRepository userRepository, AuthService authService) {
+    public UserController(UserService userService, AuthService authService) {
         this.userService = userService;
-        this.userRepository = userRepository;
         this.authService = authService;
     }
 
