@@ -1,0 +1,17 @@
+/* src/index.css */
+@import "tailwindcss";
+
+/* Si necesitas una fuente personalizada o un color 
+   que no está en Tailwind, lo defines aquí como variable:
+*/
+@theme {
+  --color-chronos-gold: #ffcc00;
+  --font-display: "Inter", sans-serif;
+}
+
+/* Cualquier "reseteo" global o estilos para etiquetas base 
+   se ponen aquí. Pero el 99% de tu diseño irá en el JSX.
+*/
+body {
+  @apply bg-slate-900 antialiased;
+}
